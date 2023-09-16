@@ -33,8 +33,8 @@ class Player:
         #print(constraints)
         symbol_count = 0
         for i in range(len(constraints)):
-            for j in range(len(constraints[i])):
-                if constraints[i][j] == "<":
+            for char in constraints[i]:
+                if char == "<":
                     symbol_count +=1
             if symbol_count == 1:
                 final_constraints.append(constraints[i])
