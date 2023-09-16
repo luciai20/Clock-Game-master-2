@@ -31,10 +31,15 @@ class Player:
         """
         final_constraints = []
         #print(constraints)
-
+        symbol_count = 0
         for i in range(len(constraints)):
-            if self.rng.random()<=0.5:
+            for j in range(len(constraints[i])):
+                if constraints[i][j] == "<":
+                    symbol_count +=1
+            if symbol_count == 1:
                 final_constraints.append(constraints[i])
+            symbol_count = 0
+                    
         return final_constraints
 
 
