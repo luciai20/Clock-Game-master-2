@@ -1,0 +1,7 @@
+The game.....has started.
+Player 1 has score -5 with satistied constraints [] unsatisfied constraints ['B<E', 'U<O<C', 'U<X<L<T', 'W<O<A<M<Q', 'H<M'] and initial constraints ['B<E', 'U<O<C', 'U<X<L<T', 'W<O<A<M<Q', 'H<M']
+Player 2 has score -5 with satistied constraints [] unsatisfied constraints ['W<F', 'H<A<W', 'R<S<K<I', 'U<E<N<H<G', 'E<Q'] and initial constraints ['W<F', 'H<A<W', 'R<S<K<I', 'U<E<N<H<G', 'E<Q']
+Player 3 has score -5 with satistied constraints [] unsatisfied constraints ['D<T', 'R<A<I', 'U<D<X<P', 'C<Q<R<I<D', 'J<N'] and initial constraints ['D<T', 'R<A<I', 'U<D<X<P', 'C<Q<R<I<D', 'J<N']
+No winner here it's a tie. Or maybe you both (or all of you) are the winners!!
+Time taken by player 1, 2 and 3 to choose : [0, 0, 0]
+Total time taken by player 1, 2 and 3 to decide moves : [0, 0, 0]
