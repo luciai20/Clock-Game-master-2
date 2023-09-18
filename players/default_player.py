@@ -32,13 +32,17 @@ class Player:
         final_constraints = []
         #print(constraints)
         symbol_count = 0
+        is_in_cards = False
         for i in range(len(constraints)):
             for char in constraints[i]:
                 if char == "<":
                     symbol_count +=1
-            if symbol_count == 1:
+                if char in cards: 
+                    is_in_cards = True
+            if symbol_count == 1 and is_in_cards==True:
                 final_constraints.append(constraints[i])
             symbol_count = 0
+            is_in_cards = False
                     
         return final_constraints
 
