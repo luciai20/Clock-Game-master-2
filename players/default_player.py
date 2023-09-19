@@ -32,6 +32,7 @@ class Player:
         final_constraints = []
 
         for constraint in constraints: 
+        #check every constraint to make sure we have atleast 1 letter in every pair in constraint
             if self.__checkPairs(cards, constraint): 
                 final_constraints.append(constraint)
                     
@@ -63,6 +64,7 @@ class Player:
         return hour, letter
     
     def __checkPairs(self, cards, constraint): 
+    #treat constraint as collection of pairs and check each pair 
         i = 0
         while i < len(constraint)-1:  
             if not self.__havePair(cards, constraint[i], constraint[i+2]):
@@ -71,5 +73,6 @@ class Player:
         return True
 
     def __havePair(self, cards, letter1, letter2): 
+    #check if we have atleast 1 letter in pair of letters 
         return letter1 in cards or letter2 in cards
 
