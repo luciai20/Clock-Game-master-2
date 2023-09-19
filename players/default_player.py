@@ -32,12 +32,8 @@ class Player:
         final_constraints = []
 
         for constraint in constraints: 
-            match constraint.count('<'): 
-                case 1: keep = self.__keep2LetterConstraint(cards, constraint)
-                case 2: keep = self.__keep3LetterConstraint(cards, constraint)
-                case 3: keep = self.__keep4LetterConstraint(cards, constraint)
-                case 4: keep = self.__keep5LetterConstraint(cards, constraint)
-            if keep: final_constraints.append(constraint)
+            if self.__checkPairs(cards, constraint): 
+                final_constraints.append(constraint)
                     
         return final_constraints
 
@@ -66,32 +62,14 @@ class Player:
         hour = hour%12 if hour%12!=0 else 12
         return hour, letter
     
-    def __keep2LetterConstraint(self, cards, constraint): 
-        return constraint[0] in cards or constraint[2] in cards
-    
-    def __keep3LetterConstraint(self, cards, constraint): 
-        counter = 0
-        for letter in constraint: 
-            if letter in cards: counter += 1
-            if counter == 2: return True 
-        return False 
-    
-    def __keep4LetterConstraint(self, cards, constraint): 
-        if constraint[0] in cards and constraint[4] in cards: return True 
-        elif constraint[2] in cards and (constraint[4] or constraint[6]) in cards: return True 
-        elif self.__howManyLetters(cards, constraint) in [3,4]: return True 
-        return False 
-    
-    def __keep5LetterConstraint(self, cards, constraint): 
-        counter = 0 
-        for letter in constraint: 
-            if letter in cards: counter += 1 
-            if counter == 2: return True 
-        return False 
-    
-    def __howManyLetters(self, cards, constraint): 
-        counter = 0 
-        for letter in constraint: 
-            if letter in cards: counter += 1
-        return counter
+    def __checkPairs(self, cards, constraint): 
+        i = 0
+        while i < len(constraint)-1:  
+            if not self.__havePair(cards, constraint[i], constraint[i+2]):
+                return False
+            i += 2
+        return True
+
+    def __havePair(self, cards, letter1, letter2): 
+        return letter1 in cards or letter2 in cards
 
