@@ -77,10 +77,9 @@ class Player:
         return False 
     
     def __keep4LetterConstraint(self, cards, constraint): 
-        counter = 0
-        for letter in constraint: 
-            if letter in cards: counter += 1
-            if counter == 2: return True 
+        if constraint[0] in cards and constraint[4] in cards: return True 
+        elif constraint[2] in cards and (constraint[4] or constraint[6]) in cards: return True 
+        elif self.__howManyLetters(cards, constraint) in [3,4]: return True 
         return False 
     
     def __keep5LetterConstraint(self, cards, constraint): 
@@ -89,3 +88,10 @@ class Player:
             if letter in cards: counter += 1 
             if counter == 2: return True 
         return False 
+    
+    def __howManyLetters(self, cards, constraint): 
+        counter = 0 
+        for letter in constraint: 
+            if letter in cards: counter += 1
+        return counter
+
