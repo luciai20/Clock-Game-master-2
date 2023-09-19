@@ -70,8 +70,11 @@ class Player:
         return constraint[0] in cards or constraint[2] in cards
     
     def __keep3LetterConstraint(self, cards, constraint): 
+        counter = 0
         for letter in constraint: 
-            if letter in cards: return True 
+            if letter in cards: counter += 1
+            if counter == 2: return True 
+        return False 
     
     def __keep4LetterConstraint(self, cards, constraint): 
         counter = 0
