@@ -30,19 +30,14 @@ class Player:
             list[int]: Return the list of constraint cards that you wish to keep. (can look at the default player logic to understand.)
         """
         final_constraints = []
-        #print(constraints)
-        symbol_count = 0
-        is_in_cards = False
-        for i in range(len(constraints)):
-            for char in constraints[i]:
-                if char == "<":
-                    symbol_count +=1
-                if char in cards: 
-                    is_in_cards = True
-            if symbol_count == 1 and is_in_cards==True:
-                final_constraints.append(constraints[i])
-            symbol_count = 0
-            is_in_cards = False
+
+        for constraint in constraints: 
+            match constraint.count('<'): 
+                case 1: keep = self.__keep2LetterConstraint(cards, constraint)
+                case 2: keep = self.__keep3LetterConstraint(cards, constraint)
+                case 3: keep = self.__keep4LetterConstraint(cards, constraint)
+                case 4: keep = self.__keep5LetterConstraint(cards, constraint)
+            if keep: final_constraints.append(constraint)
                     
         return final_constraints
 
@@ -70,3 +65,24 @@ class Player:
         hour = self.rng.choice(available_hours[0])          #because np.where returns a tuple containing the array, not the array itself
         hour = hour%12 if hour%12!=0 else 12
         return hour, letter
+    
+    def __keep2LetterConstraint(self, cards, constraint): 
+        return constraint[0] in cards or constraint[2] in cards
+    
+    def __keep3LetterConstraint(self, cards, constraint): 
+        for letter in constraint: 
+            if letter in cards: return True 
+    
+    def __keep4LetterConstraint(self, cards, constraint): 
+        counter = 0
+        for letter in constraint: 
+            if letter in cards: counter += 1
+            if counter == 2: return True 
+        return False 
+    
+    def __keep5LetterConstraint(self, cards, constraint): 
+        counter = 0 
+        for letter in constraint: 
+            if letter in cards: counter += 1 
+            if counter == 2: return True 
+        return False 
