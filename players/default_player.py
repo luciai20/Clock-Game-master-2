@@ -39,9 +39,6 @@ class Player:
                 final_constraints.append(constraint)
 
         self.__organizeCards(cards, final_constraints)
-        print("discardPile: ", self.discardPile)
-        print("lettersNeeded: ", self.lettersNeeded)
-        
         return final_constraints
 
 
