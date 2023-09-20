@@ -16,6 +16,8 @@ class Player:
             map_path (str): File path to map
             precomp_dir (str): Directory path to store/load precomputation
         """
+        self.discardPile = []
+        self.lettersNeeded = []
         self.rng = rng
 
     #def choose_discard(self, cards: list[str], constraints: list[str]):
@@ -35,7 +37,11 @@ class Player:
         #check every constraint to make sure we have atleast 1 letter in every pair in constraint
             if self.__checkPairs(cards, constraint): 
                 final_constraints.append(constraint)
-                    
+
+        self.__organizeCards(cards, final_constraints)
+        print("discardPile: ", self.discardPile)
+        print("lettersNeeded: ", self.lettersNeeded)
+        
         return final_constraints
 
 
@@ -75,4 +81,22 @@ class Player:
     def __havePair(self, cards, letter1, letter2): 
     #check if we have atleast 1 letter in pair of letters 
         return letter1 in cards or letter2 in cards
+    
+    def __organizeCards(self, cards, constraints):
+        for constraint in constraints: 
+            i = 0
+            while i < len(constraint): 
+                if constraint[i] not in cards and constraint[i] not in self.lettersNeeded: 
+                    self.lettersNeeded.append(constraint[i])
+                i += 2
+        
+        for card in cards: 
+            if self.__isDiscard(card, constraints): 
+                self.discardPile.append(card)
+
+    def __isDiscard(self, card, constraints): 
+        for constraint in constraints: 
+            if card in constraint: return False 
+        return True 
+
 
