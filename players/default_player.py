@@ -68,7 +68,12 @@ class Player:
             letter = self.nextPlay
             self.nextPlay = None
         elif letter is None:
-            letter = self.rng.choice(cards)
+            #play from discard pile if not empty else 
+            if self.discardPile != []: 
+                letter = self.rng.choice(self.discardPile)
+                self.discardPile.remove(letter)
+            else: 
+                letter = self.rng.choice(cards)
         territory_array = np.array(territory)
         available_hours = np.where(territory_array == 4)
         hour = self.rng.choice(available_hours[0])          #because np.where returns a tuple containing the array, not the array itself
