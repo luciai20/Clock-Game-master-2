@@ -18,6 +18,7 @@ class Player:
         """
         self.discardPile = []
         self.lettersNeeded = []
+        self.nextPlay = None 
         self.rng = rng
 
     #def choose_discard(self, cards: list[str], constraints: list[str]):
@@ -58,8 +59,16 @@ class Player:
             Tuple[int, str]: Return a tuple of slot from 1-12 and letter to be played at that slot
         """
         #Do we want intermediate scores also available? Confirm pls
-        
-        letter = self.rng.choice(cards)
+        letter = None 
+        for constraint in constraints: 
+            if self.__haveAllLetters(cards, constraint): 
+                letter = constraint[0]
+                self.nextPlay = constraint[2]
+        if letter is None and self.nextPlay is not None: 
+            letter = self.nextPlay
+            self.nextPlay = None
+        elif letter is None:
+            letter = self.rng.choice(cards)
         territory_array = np.array(territory)
         available_hours = np.where(territory_array == 4)
         hour = self.rng.choice(available_hours[0])          #because np.where returns a tuple containing the array, not the array itself
@@ -95,5 +104,13 @@ class Player:
         for constraint in constraints: 
             if card in constraint: return False 
         return True 
+
+    def __haveAllLetters(self, cards, constraint): 
+        i = 0 
+        while i < len(constraint):  
+            if constraint[i] not in cards: 
+                return False
+            i+=2
+        return True
 
 
