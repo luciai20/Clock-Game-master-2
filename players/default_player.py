@@ -17,8 +17,8 @@ class Player:
             precomp_dir (str): Directory path to store/load precomputation
         """
         self.discardPile = []
-        self.lettersNeeded = []
         self.nextPlay = None 
+        self.queue = []
         self.rng = rng
 
     #def choose_discard(self, cards: list[str], constraints: list[str]):
@@ -58,22 +58,33 @@ class Player:
         Returns:
             Tuple[int, str]: Return a tuple of slot from 1-12 and letter to be played at that slot
         """
-        #Do we want intermediate scores also available? Confirm pls
-        letter = None 
+        #initialize letter as random
+        letter = self.rng.choice(cards)
+        #parse all constraints
         for constraint in constraints: 
+            #if we have all letters then play this constraint
             if self.__haveAllLetters(cards, constraint): 
                 letter = constraint[0]
-                self.nextPlay = constraint[2]
-        if letter is None and self.nextPlay is not None: 
+                self.queue.append(constraint[2])
+                break
+            elif len(constraint) == 3: 
+                #2 letter constraint where we have 1 letter, check that other letter was played 
+                if constraint[0] in cards and self.__wasPlayed(constraint[2], state): 
+                    letter = constraint[0]
+                    if letter in self.queue: self.queue.remove(letter)
+                    break
+                elif constraint[2] in cards and self.__wasPlayed(constraint[0], state): 
+                    letter = constraint[2]
+                    if letter in self.queue: self.queue.remove(letter)
+                    break
+        #play next in queue if not empty
+        if letter is None and self.queue != []: 
             letter = self.nextPlay
             self.nextPlay = None
-        elif letter is None:
-            #play from discard pile if not empty else 
-            if self.discardPile != []: 
-                letter = self.rng.choice(self.discardPile)
-                self.discardPile.remove(letter)
-            else: 
-                letter = self.rng.choice(cards)
+        #play from discard if not empty 
+        elif letter is None and self.discardPile != []:
+            letter = self.rng.choice(self.discardPile)
+            self.discardPile.remove(letter)
         territory_array = np.array(territory)
         available_hours = np.where(territory_array == 4)
         hour = self.rng.choice(available_hours[0])          #because np.where returns a tuple containing the array, not the array itself
@@ -93,23 +104,19 @@ class Player:
     #check if we have atleast 1 letter in pair of letters 
         return letter1 in cards or letter2 in cards
     
+    #create discard pile 
     def __organizeCards(self, cards, constraints):
-        for constraint in constraints: 
-            i = 0
-            while i < len(constraint): 
-                if constraint[i] not in cards and constraint[i] not in self.lettersNeeded: 
-                    self.lettersNeeded.append(constraint[i])
-                i += 2
-        
         for card in cards: 
             if self.__isDiscard(card, constraints): 
                 self.discardPile.append(card)
 
+    #determine if we have all letters in a constraint
     def __isDiscard(self, card, constraints): 
         for constraint in constraints: 
             if card in constraint: return False 
         return True 
 
+    #check if we have all letters in constraint
     def __haveAllLetters(self, cards, constraint): 
         i = 0 
         while i < len(constraint):  
@@ -117,5 +124,12 @@ class Player:
                 return False
             i+=2
         return True
+    
+    #check if letter was played
+    def __wasPlayed(self, letter, state): 
+        for hour in state: 
+            if letter in state: 
+                return True 
+        return False 
 
 
