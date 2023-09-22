@@ -95,6 +95,7 @@ class Player:
         
         territory_array = np.array(territory)
         available_hours = np.where(territory_array == 4)
+        print("these are the available hours:", available_hours)
         hour = self.rng.choice(available_hours[0])
         hour = hour%12 if hour%12!=0 else 12
         return hour, letter
@@ -137,15 +138,22 @@ class Player:
     def __wasPlayedAt(self, letter, state): 
         for i, hour in enumerate(state): 
             if letter in hour: 
+                print("the hour is:", hour)
                 print("letter ", letter, " found at ", i)
                 return i
         return None 
     
     #chooseHour that we want to play at when other letter in 2 letter constraint is played  
-    def __chooseHour(self, hourPlayed, availableHours):
+    def __chooseHourLeft(self, hourPlayed, availableHours):
+        for hour in availableHours: 
+            if hourPlayed<5:
+                if ((hour - hourPlayed+5)%12) <=5: return hour 
+            else: 
+                if hourPlayed - hour <=5: return hour
+
+    def __chooseHourRight(self, hourPlayed, availableHours):
         for hour in availableHours: 
             if hour - hourPlayed <=5: return hour 
-        
         
 
 
