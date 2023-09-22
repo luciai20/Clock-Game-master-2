@@ -17,7 +17,6 @@ class Player:
             precomp_dir (str): Directory path to store/load precomputation
         """
         self.discardPile = []
-        self.nextPlay = None 
         self.queue = []
         self.rng = rng
 
@@ -46,6 +45,7 @@ class Player:
 
     #def play(self, cards: list[str], constraints: list[str], state: list[str], territory: list[int]) -> Tuple[int, str]:
     def play(self, cards, constraints, state, territory):
+        print("\ncards: ", cards)
         """Function which based n current game state returns the distance and angle, the shot must be played
 
         Args:
@@ -58,36 +58,44 @@ class Player:
         Returns:
             Tuple[int, str]: Return a tuple of slot from 1-12 and letter to be played at that slot
         """
-        #initialize letter as random
-        letter = self.rng.choice(cards)
+        letter = None           #because np.where returns a tuple containing the array, not the array itself
         #parse all constraints
         for constraint in constraints: 
             #if we have all letters then play this constraint
             if self.__haveAllLetters(cards, constraint): 
+                print("have all letters in ", constraint)
                 letter = constraint[0]
+                print("setting letter to ", letter)
                 self.queue.append(constraint[2])
                 break
             elif len(constraint) == 3: 
                 #2 letter constraint where we have 1 letter, check that other letter was played 
-                if constraint[0] in cards and self.__wasPlayed(constraint[2], state): 
+                if constraint[0] in cards and self.__wasPlayedAt(constraint[2], state) is not None: 
+                    print("playing ", constraint[0])
                     letter = constraint[0]
                     if letter in self.queue: self.queue.remove(letter)
                     break
-                elif constraint[2] in cards and self.__wasPlayed(constraint[0], state): 
+                elif constraint[2] in cards and self.__wasPlayedAt(constraint[0], state) is not None: 
+                    print("playing ", constraint[2])
                     letter = constraint[2]
                     if letter in self.queue: self.queue.remove(letter)
                     break
         #play next in queue if not empty
         if letter is None and self.queue != []: 
-            letter = self.nextPlay
-            self.nextPlay = None
+            print("letter is none and queue is not empty")
+            print("queue: ", self.queue)
+            letter = self.queue.pop()
         #play from discard if not empty 
-        elif letter is None and self.discardPile != []:
-            letter = self.rng.choice(self.discardPile)
-            self.discardPile.remove(letter)
+        elif letter is None: 
+            if self.discardPile != []:
+                print("letter is none and discard pile is not empty")
+                letter = self.rng.choice(self.discardPile)
+                self.discardPile.remove(letter)
+            else: letter = self.rng.choice(cards)
+        
         territory_array = np.array(territory)
         available_hours = np.where(territory_array == 4)
-        hour = self.rng.choice(available_hours[0])          #because np.where returns a tuple containing the array, not the array itself
+        hour = self.rng.choice(available_hours[0])
         hour = hour%12 if hour%12!=0 else 12
         return hour, letter
     
@@ -126,10 +134,18 @@ class Player:
         return True
     
     #check if letter was played
-    def __wasPlayed(self, letter, state): 
-        for hour in state: 
-            if letter in state: 
-                return True 
-        return False 
+    def __wasPlayedAt(self, letter, state): 
+        for i, hour in enumerate(state): 
+            if letter in hour: 
+                print("letter ", letter, " found at ", i)
+                return i
+        return None 
+    
+    #chooseHour that we want to play at when other letter in 2 letter constraint is played  
+    def __chooseHour(self, hourPlayed, availableHours):
+        for hour in availableHours: 
+            if hour - hourPlayed <=5: return hour 
+        
+        
 
 
