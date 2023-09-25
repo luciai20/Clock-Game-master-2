@@ -34,8 +34,7 @@ class Player:
         final_constraints = []
 
         for constraint in constraints: 
-        #check every constraint to make sure we have atleast 1 letter in every pair in constraint
-            if len(constraint) > 3: continue 
+        #check every constraint to make sure we have atleast 1 letter in every pair in constraint 
             if self.__checkPairs(cards, constraint): 
                 final_constraints.append(constraint)
 
@@ -46,7 +45,7 @@ class Player:
 
     #def play(self, cards: list[str], constraints: list[str], state: list[str], territory: list[int]) -> Tuple[int, str]:
     def play(self, cards, constraints, state, territory):
-        print("\ncards: ", cards)
+        print("\n cards: ", cards)
         """Function which based n current game state returns the distance and angle, the shot must be played
 
         Args:
@@ -63,50 +62,58 @@ class Player:
         hour = None          
         territory_array = np.array(territory)
         available_hours = np.where(territory_array == 4)
-        #parse all constraints
-        for constraint in constraints: 
-            #if we have all letters then play this constraint
-            if self.__haveAllLetters(cards, constraint): 
-                print("have all letters in ", constraint)
-                letter = constraint[0]
-                print("setting letter to ", letter)
-                self.queue.append(constraint[2])
-                break
-            elif len(constraint) == 3: 
+        #parse all constraints from smallest to biggest
+        constraints.sort()
+        for constraint0 in constraints: 
+            #if we have a good play with letter AND hour, stop checking constraints 
+            if (letter is not None or self.queue != []) and hour is not None:  break
+            #split constraint into smaller 2 letter constraints 
+            #ex. U<O<C will become ["U<O", "O<C"]
+            for constraint in self.__getSmallerConstraints(constraint0):
+                if self.__lettersMissing(cards, constraint) == 0: 
+                    print("have all letters")
+                    #if we have both letters, queue them 
+                    if constraint[2] not in self.queue: self.queue.append(constraint[2])
+                    print("appending ", constraint[2], " to queue")
+                    if constraint[0] not in self.queue: self.queue.append(constraint[0])
+                    print("appending ", constraint[0], " to queue")
+                    break 
                 #2 letter constraint where we have 1 letter, check that other letter was played 
                 playedAt = self.__wasPlayedAt(constraint[2], state)
                 if constraint[0] in cards and playedAt is not None: 
-                    print("playing ", constraint[0])
-                    letter = constraint[0]
-                    if letter in self.queue: self.queue.remove(letter)
+                    print(constraint[0], " in cards and ", constraint[2], " was played at ", playedAt)
+                    #if letter is last one missing to fulfill the full constraint, place at beginning of queue 
+                    #else place it at end of queue 
+                    if self.__lettersMissing(cards, constraint0) == 1: self.queue[0] = constraint[0]
+                    elif constraint[0] not in self.queue: self.queue.append(constraint[0]) 
                     hour = self.__chooseHour(playedAt, state, False)
                     break
                 playedAt = self.__wasPlayedAt(constraint[0], state)
                 if constraint[2] in cards and playedAt is not None: 
-                    print("playing ", constraint[2])
+                    print(constraint[2], " in cards and ", constraint[0], " was played at ", playedAt)
                     letter = constraint[2]
                     if letter in self.queue: self.queue.remove(letter)
                     hour = self.__chooseHour(playedAt, state, True)
-                    break
+                    break 
+                    
         #play next in queue if not empty
         if letter is None and self.queue != []: 
-            print("letter is none and queue is not empty")
-            print("queue: ", self.queue)
-            letter = self.queue.pop()
+            letter = self.queue.pop(0)
+            print("playing from queue: ", letter)
         #play from discard if not empty 
         elif letter is None: 
             if self.discardPile != []:
-                print("letter is none and discard pile is not empty")
+                print("playing from discard")
                 letter = self.rng.choice(self.discardPile)
                 self.discardPile.remove(letter)
-            else: letter = self.rng.choice(cards)
+            else: 
+                print("playing from random")
+                letter = self.rng.choice(cards)
         
         #territory_array = np.array(territory)
         #available_hours = np.where(territory_array == 4)
-        print("these are the available hours:", available_hours)
         if hour is None:   
-            hour = self.rng.choice(available_hours[0])
-            hour = hour%12 if hour%12!=0 else 12
+            hour = self.__chooseRandomHour(state, available_hours)
         return hour, letter
     
     def __checkPairs(self, cards, constraint): 
@@ -135,21 +142,19 @@ class Player:
         return True 
 
     #check if we have all letters in constraint
-    def __haveAllLetters(self, cards, constraint): 
+    def __lettersMissing(self, cards, constraint): 
         i = 0 
+        lettersMissing = 0
         while i < len(constraint):  
             if constraint[i] not in cards: 
-                return False
+                lettersMissing += 1
             i+=2
-        return True
+        return lettersMissing
     
     #check if letter was played
     def __wasPlayedAt(self, letter, state): 
-        print("state: ", state)
         for hour, letterAtHour in enumerate(state): 
             if letter == letterAtHour: 
-                print("the hour is:", hour)
-                print("letter ", letter, " found at ", hour)
                 return hour
         return None 
     
@@ -161,7 +166,6 @@ class Player:
             i = 1
             while i < 6: 
                 hour = (hourPlayed+i)%24
-                print("hour in if: ", hour)
                 if state[hour] == 'Z': return hour
                 complimentary = self.__getComplimentary(hour)
                 if state[complimentary] == 'Z': return complimentary
@@ -170,18 +174,39 @@ class Player:
             i = 1 
             while i < 6: 
                 hour = (hourPlayed-i)%24
-                print("hour: ", hour)
                 if state[hour] == 'Z': return hour 
                 complimentary = self.__getComplimentary(hour)
                 if state[complimentary] == 'Z': return complimentary
                 i += 1
 
+    #for when we choose from discard or random 
+    #instead of getting random hour we want to play at an hour that has both slots empty if possible 
+    def __chooseRandomHour(self, state, availableHours): 
+        i = 0 
+        while i < 12: 
+            if state[i] == 'Z' and state[i+12] == 'Z': return i 
+            i += 1
+        hour = self.rng.choice(availableHours[0])
+        return hour%12 if hour%12!=0 else 12
+        
 
+    #if hour == 0, return 12 and viceversa
     def __getComplimentary(self, hour):
         if hour >= 12: 
             return hour%12
         else: 
             return hour+12
+    
+    #split larger constraints up into groups of 2 letter constraints 
+    def __getSmallerConstraints(self, constraint): 
+        i = 0 
+        finalConstraints =  []
+        print("originalConstraint: ", constraint)
+        while i < len(constraint)-1: 
+            finalConstraints.append(constraint[i] + '<' + constraint[i+2])
+            i += 2
+        print("finalConstraints: ", finalConstraints)
+        return finalConstraints
 
         
 
