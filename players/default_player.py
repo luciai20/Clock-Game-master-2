@@ -58,7 +58,10 @@ class Player:
         Returns:
             Tuple[int, str]: Return a tuple of slot from 1-12 and letter to be played at that slot
         """
-        letter = None           #because np.where returns a tuple containing the array, not the array itself
+        letter = None  #because np.where returns a tuple containing the array, not the array itself
+        hour = None          
+        territory_array = np.array(territory)
+        available_hours = np.where(territory_array == 4)
         #parse all constraints
         for constraint in constraints: 
             #if we have all letters then play this constraint
@@ -74,11 +77,13 @@ class Player:
                     print("playing ", constraint[0])
                     letter = constraint[0]
                     if letter in self.queue: self.queue.remove(letter)
+                    hour = self.__chooseHourLeft(self.__wasPlayedAt(constraint[2], state), available_hours)
                     break
                 elif constraint[2] in cards and self.__wasPlayedAt(constraint[0], state) is not None: 
                     print("playing ", constraint[2])
                     letter = constraint[2]
                     if letter in self.queue: self.queue.remove(letter)
+                    hour = self.__chooseHourRight(self.__wasPlayedAt(constraint[0], state), available_hours)
                     break
         #play next in queue if not empty
         if letter is None and self.queue != []: 
@@ -93,11 +98,12 @@ class Player:
                 self.discardPile.remove(letter)
             else: letter = self.rng.choice(cards)
         
-        territory_array = np.array(territory)
-        available_hours = np.where(territory_array == 4)
+        #territory_array = np.array(territory)
+        #available_hours = np.where(territory_array == 4)
         print("these are the available hours:", available_hours)
-        hour = self.rng.choice(available_hours[0])
-        hour = hour%12 if hour%12!=0 else 12
+        if hour is None:   
+            hour = self.rng.choice(available_hours[0])
+            hour = hour%12 if hour%12!=0 else 12
         return hour, letter
     
     def __checkPairs(self, cards, constraint): 
@@ -153,7 +159,11 @@ class Player:
 
     def __chooseHourRight(self, hourPlayed, availableHours):
         for hour in availableHours: 
-            if hour - hourPlayed <=5: return hour 
+            if hourPlayed>7 and hour<12: 
+                if (hour-hourPlayed+12) <=5: return hour
+            else:
+                if hour-hourPlayed <=5: return hour
         
+
 
 
