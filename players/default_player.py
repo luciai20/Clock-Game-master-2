@@ -35,6 +35,7 @@ class Player:
 
         for constraint in constraints: 
         #check every constraint to make sure we have atleast 1 letter in every pair in constraint
+            if len(constraint) > 3: continue 
             if self.__checkPairs(cards, constraint): 
                 final_constraints.append(constraint)
 
@@ -73,17 +74,19 @@ class Player:
                 break
             elif len(constraint) == 3: 
                 #2 letter constraint where we have 1 letter, check that other letter was played 
-                if constraint[0] in cards and self.__wasPlayedAt(constraint[2], state) is not None: 
+                playedAt = self.__wasPlayedAt(constraint[2], state)
+                if constraint[0] in cards and playedAt is not None: 
                     print("playing ", constraint[0])
                     letter = constraint[0]
                     if letter in self.queue: self.queue.remove(letter)
-                    hour = self.__chooseHourLeft(self.__wasPlayedAt(constraint[2], state), available_hours)
+                    hour = self.__chooseHour(playedAt, state, False)
                     break
-                elif constraint[2] in cards and self.__wasPlayedAt(constraint[0], state) is not None: 
+                playedAt = self.__wasPlayedAt(constraint[0], state)
+                if constraint[2] in cards and playedAt is not None: 
                     print("playing ", constraint[2])
                     letter = constraint[2]
                     if letter in self.queue: self.queue.remove(letter)
-                    hour = self.__chooseHourRight(self.__wasPlayedAt(constraint[0], state), available_hours)
+                    hour = self.__chooseHour(playedAt, state, True)
                     break
         #play next in queue if not empty
         if letter is None and self.queue != []: 
@@ -142,27 +145,44 @@ class Player:
     
     #check if letter was played
     def __wasPlayedAt(self, letter, state): 
-        for i, hour in enumerate(state): 
-            if letter in hour: 
+        print("state: ", state)
+        for hour, letterAtHour in enumerate(state): 
+            if letter == letterAtHour: 
                 print("the hour is:", hour)
-                print("letter ", letter, " found at ", i)
-                return i
+                print("letter ", letter, " found at ", hour)
+                return hour
         return None 
     
     #chooseHour that we want to play at when other letter in 2 letter constraint is played  
-    def __chooseHourLeft(self, hourPlayed, availableHours):
-        for hour in availableHours: 
-            if hourPlayed<5:
-                if ((hour - hourPlayed+5)%12) <=5: return hour 
-            else: 
-                if hourPlayed - hour <=5: return hour
+    def __chooseHour(self, hourPlayed, state, clockwise):
+        if hourPlayed < 12: 
+            hourPlayed = hourPlayed + 12 
+        if clockwise:  
+            i = 1
+            while i < 6: 
+                hour = (hourPlayed+i)%24
+                print("hour in if: ", hour)
+                if state[hour] == 'Z': return hour
+                complimentary = self.__getComplimentary(hour)
+                if state[complimentary] == 'Z': return complimentary
+                i += 1 
+        else: 
+            i = 1 
+            while i < 6: 
+                hour = (hourPlayed-i)%24
+                print("hour: ", hour)
+                if state[hour] == 'Z': return hour 
+                complimentary = self.__getComplimentary(hour)
+                if state[complimentary] == 'Z': return complimentary
+                i += 1
 
-    def __chooseHourRight(self, hourPlayed, availableHours):
-        for hour in availableHours: 
-            if hourPlayed>7 and hour<12: 
-                if (hour-hourPlayed+12) <=5: return hour
-            else:
-                if hour-hourPlayed <=5: return hour
+
+    def __getComplimentary(self, hour):
+        if hour >= 12: 
+            return hour%12
+        else: 
+            return hour+12
+
         
 
 
