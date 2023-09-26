@@ -84,15 +84,15 @@ class Player:
                     print(constraint[0], " in cards and ", constraint[2], " was played at ", playedAt)
                     #if letter is last one missing to fulfill the full constraint, place at beginning of queue 
                     #else place it at end of queue 
-                    if self.__lettersMissing(cards, constraint0) == 1: self.queue[0] = constraint[0]
+                    if self.__lettersMissing(cards, constraint0) == 1 and constraint[0] not in self.queue: self.queue.insert(0, constraint[0])
                     elif constraint[0] not in self.queue: self.queue.append(constraint[0]) 
                     hour = self.__chooseHour(playedAt, state, False)
                     break
                 playedAt = self.__wasPlayedAt(constraint[0], state)
                 if constraint[2] in cards and playedAt is not None: 
                     print(constraint[2], " in cards and ", constraint[0], " was played at ", playedAt)
-                    letter = constraint[2]
-                    if letter in self.queue: self.queue.remove(letter)
+                    if self.__lettersMissing(cards, constraint0) == 1 and constraint[2] not in self.queue: self.queue.insert(0, constraint[2])
+                    elif constraint[2] not in self.queue: self.queue.append(constraint[2])
                     hour = self.__chooseHour(playedAt, state, True)
                     break 
                     
