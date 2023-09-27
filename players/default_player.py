@@ -163,21 +163,21 @@ class Player:
         if hourPlayed < 12: 
             hourPlayed = hourPlayed + 12 
         if clockwise:  
-            i = 1
-            while i < 6: 
+            i = 5
+            while i > 0: 
                 hour = (hourPlayed+i)%24
                 if state[hour] == 'Z': return hour
                 complimentary = self.__getComplimentary(hour)
                 if state[complimentary] == 'Z': return complimentary
-                i += 1 
+                i -= 1 
         else: 
-            i = 1 
-            while i < 6: 
+            i = 5 
+            while i > 0: 
                 hour = (hourPlayed-i)%24
                 if state[hour] == 'Z': return hour 
                 complimentary = self.__getComplimentary(hour)
                 if state[complimentary] == 'Z': return complimentary
-                i += 1
+                i -= 1
 
     #for when we choose from discard or random 
     #instead of getting random hour we want to play at an hour that has both slots empty if possible 
