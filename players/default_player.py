@@ -38,8 +38,8 @@ class Player:
         fiveLetterConstraints = []
 
         #only parse first 100 constraints to avoid crashing with time complexity 
-        if len(constraints) > 100:
-            constraints = constraints[:100]
+        #if len(constraints) > 100:
+            #constraints = constraints[:100]
         
         #separate constraints by size 
         for constraint in constraints: 
@@ -89,7 +89,7 @@ class Player:
         available_hours = np.where(territory_array == 4)
         #parse all constraints from smallest to biggest
 
-        constraints.sort()
+        constraints.sort(reverse = True)
         for constraint0 in constraints: 
             print("larger constraint: ", constraint0)
             #if we have a good play with letter AND hour, stop checking constraints 
@@ -100,6 +100,8 @@ class Player:
             if self.__readyToPlay(cards, state, constraint0): 
                 print("have all letters in larger constraint") 
                 self.__queueAllLetters(cards, constraint0)
+                if self.__lettersMissing(cards, constraint0) == 0: 
+                    break
             else: 
                 #if constraint is not ready to be played, continue (play from queue or discard)
                 continue
@@ -135,12 +137,15 @@ class Player:
                 self.discardPile.remove(letter)
             else: 
                 print("playing next best play")
-                return self.__chooseNextBestPlay(state, cards, constraints)
+                nextPlay = self.__chooseNextBestPlay(state, cards, constraints)
+                if nextPlay is not None: hour, letter = nextPlay
         
         #territory_array = np.array(territory)
         #available_hours = np.where(territory_array == 4)
         if hour is None:   
             hour = self.__chooseRandomHour(state, available_hours)
+        if letter is None: 
+            letter = self.rng.choice(cards)
         print("returning: ", hour, letter)
         return hour, letter
     
@@ -314,15 +319,25 @@ class Player:
                     print(constraint[0], " was played at ", playedAt, " and ", constraint[2], " in cards")
                     hour = self.__chooseHour(playedAt, state, True)
                     letter = constraint[2]
-                    print("returning: ", hour, letter)
-                    return hour, letter
+                    print("hour: ", hour)
+                    print("letter: ", letter)
+                    if hour is None or letter is None: 
+                        print("returning none")
+                        return None 
+                    else: return hour, letter
                 playedAt = self.__wasPlayedAt(constraint[2], state)
                 if playedAt is not None and constraint[0] in cards: 
                     print(constraint[2], " was played at ", playedAt, " and ", constraint[0], " in cards")
                     hour = self.__chooseHour(playedAt, state, False)
-                    letter = constraint[2]
+                    letter = constraint[0]
+                    print("hour: ", hour)
+                    print("letter: ", letter)
                     print("returning: ", hour, letter)
-                    return hour, letter
+                    if hour is None or letter is None:
+                        print("returning none") 
+                        return None
+                    else: return hour, letter
+        print("no next play")
 
     #for when we choose from discard or random 
     #instead of getting random hour we want to play at an hour that has both slots empty if possible 
