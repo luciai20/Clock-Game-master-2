@@ -135,7 +135,7 @@ class Player:
                 self.discardPile.remove(letter)
             else: 
                 print("playing next best play")
-                self.__chooseNextBestPlay(state, cards, constraints)
+                return self.__chooseNextBestPlay(state, cards, constraints)
         
         #territory_array = np.array(territory)
         #available_hours = np.where(territory_array == 4)
