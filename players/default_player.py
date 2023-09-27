@@ -32,13 +32,38 @@ class Player:
             list[int]: Return the list of constraint cards that you wish to keep. (can look at the default player logic to understand.)
         """
         final_constraints = []
+        twoLetterConstraints = []
+        threeLetterConstraints = []
+        fourLetterConstraints = []
+        fiveLetterConstraints = []
 
+        #only parse first 100 constraints to avoid crashing with time complexity 
+        if len(constraints) > 100:
+            constraints = constraints[:100]
+        
+        #separate constraints by size 
         for constraint in constraints: 
-        #check every constraint to make sure we have atleast 1 letter in every pair in constraint 
-            if self.__checkPairs(cards, constraint): 
-                final_constraints.append(constraint)
+            if not self.__checkPairs(cards, constraint): continue 
+            if len(constraint) == 3: 
+                twoLetterConstraints.append(constraint)
+            elif len(constraint) == 5: 
+                threeLetterConstraints.append(constraint)
+            elif len(constraint) == 7: 
+                fourLetterConstraints.append(constraint)
+            else: 
+                fiveLetterConstraints.append(constraint)
 
-        self.__organizeCards(cards, final_constraints)
+        if len(twoLetterConstraints) > 10: 
+            twoLetterConstraints = self.__chooseTwoLetterConstraints(twoLetterConstraints, threeLetterConstraints, fourLetterConstraints, fiveLetterConstraints, cards)
+        if len(threeLetterConstraints) > 5: 
+            threeLetterConstraints = self.__chooseThreeLetterConstraints(twoLetterConstraints, threeLetterConstraints, cards)
+        if len(fourLetterConstraints) > 3: 
+            fourLetterConstraints = self.__chooseFourLetterConstraints(twoLetterConstraints, fourLetterConstraints)
+        if len(fiveLetterConstraints) > 2: 
+            fiveLetterConstraints = self.__chooseFiveLetterConstraints(twoLetterConstraints, fiveLetterConstraints, cards)
+        final_constraints = twoLetterConstraints + threeLetterConstraints + fourLetterConstraints + fiveLetterConstraints
+
+        self.__getDiscard(cards, final_constraints)
         return final_constraints
 
 
@@ -129,8 +154,88 @@ class Player:
     #check if we have atleast 1 letter in pair of letters 
         return letter1 in cards or letter2 in cards
     
+    #choose 10 best 2 letter constraints 
+    def __chooseTwoLetterConstraints(self, twoLetterConstraints, threeLetterConstraints, fourLetterConstraints, fiveLetterConstraints, cards):
+        finalConstraints = []
+        leftover = []
+        for constraint in twoLetterConstraints: 
+            #prioritize constraints that are part of larger constraint 
+            if self.__isInLargerConstraint(constraint, fiveLetterConstraints): 
+                finalConstraints.insert(0, constraint)
+            elif self.__isInLargerConstraint(constraint, fourLetterConstraints): 
+                finalConstraints.insert(0, constraint)
+            elif self.__isInLargerConstraint(constraint, threeLetterConstraints): 
+                finalConstraints.insert(0, constraint)
+            #next priority is we have both letters
+            elif constraint[0] in cards and constraint[2] in cards:
+                finalConstraints.append(constraint)
+            else: 
+                leftover.append(constraint)
+        #only keep first 10 prioritized constraints
+        if len(finalConstraints) > 10: return finalConstraints[:11]
+        elif len(finalConstraints) == 10: return finalConstraints
+        else: return finalConstraints + leftover[:(10-len(finalConstraints))]
+
+    #choose 5 best 3 letter constraints 
+    def __chooseThreeLetterConstraints(self, twoLetterConstraints, threeLetterConstraints, cards): 
+        finalConstraints = []
+        leftover = []
+        for constraint in threeLetterConstraints: 
+            #prioritize if it has a smaller constraint inside that we're keeping 
+            if self.__hasSmallerConstraint(twoLetterConstraints, constraint): 
+                finalConstraints.insert(0, constraint)
+            #next prioritize if we have 2 letters
+            elif self.__lettersMissing(cards, constraint) == 2: 
+                finalConstraints.append(constraint)
+            else: 
+                leftover.append(constraint)
+        if len(finalConstraints) > 5: return finalConstraints[:5]
+        elif len(finalConstraints) == 5: return finalConstraints
+        else: return finalConstraints + leftover[:5-(len(finalConstraints))]
+
+    #choose 3 best 4 letter constraints 
+    def __chooseFourLetterConstraints(self, twoLetterConstraints, fourLetterConstraints): 
+        finalConstraints = []
+        for constraint in fourLetterConstraints: 
+            #prioritize if it has a smaller constraint inside that we're keeping 
+            if self.__hasSmallerConstraint(twoLetterConstraints, constraint): 
+                finalConstraints.insert(0, constraint)
+            else: 
+                finalConstraints.append(constraint)
+        if len(finalConstraints) > 3: return finalConstraints[:3]
+        else: return finalConstraints
+    
+    def __chooseFiveLetterConstraints(self, twoLetterConstraints, fiveLetterConstraints, cards): 
+        finalConstraints = []
+        leftover = []
+        for constraint in fiveLetterConstraints: 
+            #prioritize if it has a smaller constraint inside that we're keeping 
+            if self.__hasSmallerConstraint(twoLetterConstraints, constraint): 
+                finalConstraints.insert(0, constraint)
+            #next prioritize if we have 3 letters 
+            elif self.__lettersMissing(cards, constraint) == 2: 
+                finalConstraints.append(constraint)
+            else: leftover.append(constraint)
+        if len(finalConstraints) > 2: return finalConstraints[:2]
+        elif len(finalConstraints) == 2: return finalConstraints
+        else: return finalConstraints + leftover[:(2-len(finalConstraints))]
+
+    def __hasSmallerConstraint(self, smallerConstraints, largerConstraint): 
+        largerConstraint = "".join(largerConstraint)
+        for constraint in smallerConstraints: 
+            if "".join(constraint) in largerConstraint:
+                return True 
+        return False
+    
+    def __isInLargerConstraint(self, smallerConstraint, largerConstraints): 
+        smallerConstraint = "".join(smallerConstraint)
+        for constraint in largerConstraints: 
+            if smallerConstraint in "".join(constraint):
+                return True 
+        return False
+    
     #create discard pile 
-    def __organizeCards(self, cards, constraints):
+    def __getDiscard(self, cards, constraints):
         for card in cards: 
             if self.__isDiscard(card, constraints): 
                 self.discardPile.append(card)
